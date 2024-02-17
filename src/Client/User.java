@@ -14,7 +14,7 @@ public class User {
 		super();
 		this.id = id;
 		this.s = s;
-	}
+	} 
 
 	public int getId() {
 		return id;
