@@ -1,15 +1,18 @@
 package Server;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
+import java.net.SocketException;
+
+import Client.Message;
 
 /**
  * Conexion es un hilo que gestiona la escucha activa de los mensajes del
  * usuario asociado al socket se queda leyendo hasta que lee algo y entonces
  */
 public class InChannel extends Channel {
-
 
 	public InChannel(Socket s, MessageManager group) {
 		super(s, group);
@@ -22,40 +25,50 @@ public class InChannel extends Channel {
 		super.run();
 		joinGroup();
 
-		while (true) {
+		try (ObjectInputStream ois = new ObjectInputStream(s.getInputStream())) {
+	        while (true) {
+	            try {
+	                Message msg = readMsg(ois);
 
-
-			byte [] msg = readMsg();
-			
-			if(msg != null) {
-				addMessageToGroup(msg);
-			}
-
-		}
+	                if (msg != null) {
+	                    addMessageToGroup(msg);
+	                }
+	            } catch (EOFException e) {
+	                System.out.println("Cliente desconectado: " + s.getRemoteSocketAddress());
+	                break; // Salir del bucle si el cliente se desconecta
+	            } catch (ClassNotFoundException e) {
+	                System.out.println("Clase no encontrada: " + e.getMessage());
+	            } catch (IOException e) {
+	                System.out.println("Error al leer el mensaje: " + e.getMessage());
+	                break; // Salir del bucle si ocurre un error de IO diferente
+	            }
+	        }
+	    } catch (SocketException e) {
+	        System.out.println("Conexión reseteada por el cliente");
+	    } catch (IOException e) {
+	        System.out.println("Error al obtener el flujo de entrada: " + e.getMessage());
+	    } finally {
+	        try {
+	            s.close();
+	        } catch (IOException e) {
+	            System.out.println("Error al cerrar el socket: " + e.getMessage());
+	        }
+	        leaveGroup();
+	    }
 
 	}
 
+	private void leaveGroup() {
+		// TODO Auto-generated method stub
+		group.getSockets().remove(s);
+	}
 
-	private void addMessageToGroup(byte[] msg) {
+	private void addMessageToGroup(Message msg) {
 		this.group.addMessage(msg, s);
 	}
 
-
-
-	private byte[] readMsg() {
-
-		byte [] msg = null;
-		try {
-			ObjectInputStream ois = new ObjectInputStream(s.getInputStream());
-			msg = (byte[]) ois.readObject();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return msg;
+	private Message readMsg(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+	    return (Message) ois.readObject(); // EOFException será capturado en el método run
 	}
 
 	private void joinGroup() {

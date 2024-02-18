@@ -1,50 +1,25 @@
 package Client;
 
+import java.io.Serializable;
 import java.net.Socket;
 
-/**
- * La clase usuario sera la encargadade mostrar los mensajes recibitos
- * y enviar los mensajes escritos
- */
-public class User {
-	int id;
-	Socket s;
 
-	public User(int id, Socket s) {
+public class User implements Serializable{
+	String name;
+
+	public User(String name, Socket s) {
 		super();
-		this.id = id;
-		this.s = s;
-	} 
 
-	public int getId() {
-		return id;
+		this.name = name;
 	}
 
-	public void setId(int id) {
-		this.id = id;
+	public String getName() {
+		return name;
 	}
 
-	public Socket getS() {
-		return s;
+	public void setName(String name) {
+		this.name = name;
 	}
 
-	public void setS(Socket s) {
-		this.s = s;
-	}
-
-	/**
-	 * Muestra el mensaje y lo envia el mensaje
-	 * @param msg
-	 */
-	public void sendMessage(String msg) {
-
-	}
-	/**
-	 * Recibe el mensaje y lo muestra
-	 * @param msg
-	 */
-	public void reciveMessage(String msg) {
-
-	}
 
 }

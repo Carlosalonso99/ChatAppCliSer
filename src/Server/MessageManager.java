@@ -4,6 +4,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+import Client.Message;
+
 /**
  * El la clase que gestiona los grupos Contiene los sockets de los
  * usuarios(Cliente) de este grupo
@@ -13,15 +15,15 @@ import java.util.List;
 public class MessageManager {
 	private String name;
 	private List<Socket> sockets;
-	private List<byte[]> messages;
-	private boolean sent;
+	private List<Message> messages;
+	private volatile boolean sent;
 
-	public MessageManager() {
+	public MessageManager(/*String name*/) {
 		super();
 		this.name = "Grupo prueba";
 		this.sockets = new ArrayList<Socket>();
-		this.messages = new ArrayList<byte[]>();
-		this.sent = false;
+		this.messages = new ArrayList<Message>();
+		this.sent = true;
 	}
 
 	public List<Socket> getSockets() {
@@ -32,11 +34,11 @@ public class MessageManager {
 		this.sockets = sockets;
 	}
 
-	public List<byte[]> getMessages() {
+	public List<Message> getMessages() {
 		return messages;
 	}
 
-	public void setMessages(List<byte[]> messages) {
+	public void setMessages(List<Message> messages) {
 		this.messages = messages;
 	}
 
@@ -66,7 +68,7 @@ public class MessageManager {
 	 * @param msg
 	 * @param s
 	 */
-	public synchronized void addMessage(byte[] msg, Socket s) {
+	public synchronized void addMessage(Message msg, Socket s) {
 		// TODO Auto-generated method stub
 		messages.add(msg);
 		setSent(false);
