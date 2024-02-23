@@ -19,7 +19,8 @@ public class InChannel extends Channel {
 	    try {
 	        ois = new ObjectInputStream(this.s.getInputStream());
 	        while (true) {
-	            Message msg = (Message) ois.readObject();
+	            Message msg = msgMan.reciveMessage(ois);
+	            System.out.println(new String(msg.getMsg()));
 	            if (msg != null) {
 	                msgMan.setMsg(msg);
 	            }
@@ -29,8 +30,7 @@ public class InChannel extends Channel {
 	        // Aquí puedes manejar la reconexión si es necesario o cerrar la aplicación de manera ordenada
 	    } catch (IOException e) {
 	        e.printStackTrace();
-	    } catch (ClassNotFoundException e) {
-	        e.printStackTrace();
+	        //Para gestionar cuando el cliente se desconecta
 	    } finally {
 	    	try {
 				ois.close();

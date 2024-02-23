@@ -27,8 +27,11 @@ public class InChannel extends Channel {
 
 		try (ObjectInputStream ois = new ObjectInputStream(s.getInputStream())) {
 	        while (true) {
+
 	            try {
-	                Message msg = readMsg(ois);
+	            	System.out.println("esperando mensaje");
+	                byte [] msg = readMsg(ois);
+
 
 	                if (msg != null) {
 	                    addMessageToGroup(msg);
@@ -63,12 +66,15 @@ public class InChannel extends Channel {
 		group.getSockets().remove(s);
 	}
 
-	private void addMessageToGroup(Message msg) {
-		this.group.addMessage(msg, s);
+	private void addMessageToGroup(byte[] msg) {
+		synchronized (group) {
+			this.group.addMessage(msg, s);
+		}
+		
 	}
 
-	private Message readMsg(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-	    return (Message) ois.readObject(); // EOFException será capturado en el método run
+	private byte [] readMsg(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+	    return  (byte[]) ois.readObject(); // EOFException será capturado en el método run
 	}
 
 	private void joinGroup() {

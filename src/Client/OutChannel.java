@@ -17,12 +17,25 @@ public class OutChannel extends Channel {
 		super.run();
 		try {
 			ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
-			while (true) {
-				if (!msgMan.isSent()) {
-					oos.writeObject(msgMan.getMsg());
-					oos.flush();
-					msgMan.setSent(true);
+			synchronized (msgMan) {
+
+				while (msgMan.getMsg() == null) {
+					try {
+						System.out.println("cliente output esperando a para enviar");
+						msgMan.wait();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					System.out.println("antes del if");
+					if (msgMan.getMsg() != null) {
+						System.out.println("entra en el if");
+						msgMan.sendMessage(oos);
+						msgMan.setMsg(null);
+						msgMan.setSent(true);
+					}
 				}
+				
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

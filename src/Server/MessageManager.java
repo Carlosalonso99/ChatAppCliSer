@@ -15,14 +15,17 @@ import Client.Message;
 public class MessageManager {
 	private String name;
 	private List<Socket> sockets;
-	private List<Message> messages;
+	private List<byte[]> messages;
 	private volatile boolean sent;
+	private volatile int sentTo = 0;
+
+
 
 	public MessageManager(/*String name*/) {
 		super();
 		this.name = "Grupo prueba";
 		this.sockets = new ArrayList<Socket>();
-		this.messages = new ArrayList<Message>();
+		this.messages = new ArrayList<byte[]>();
 		this.sent = true;
 	}
 
@@ -34,11 +37,11 @@ public class MessageManager {
 		this.sockets = sockets;
 	}
 
-	public List<Message> getMessages() {
+	public List<byte[]> getMessages() {
 		return messages;
 	}
 
-	public void setMessages(List<Message> messages) {
+	public void setMessages(List<byte[]> messages) {
 		this.messages = messages;
 	}
 
@@ -54,8 +57,12 @@ public class MessageManager {
 		return sent;
 	}
 
-	public void setSent(boolean sent) {
+	public synchronized void setSent(boolean sent) {
 		this.sent = sent;
+	}
+
+	public int getSentTo() {
+		return sentTo;
 	}
 
 	public void addSocket(Socket s) {
@@ -68,12 +75,33 @@ public class MessageManager {
 	 * @param msg
 	 * @param s
 	 */
-	public synchronized void addMessage(Message msg, Socket s) {
+	public synchronized void addMessage(byte[] msg, Socket s) {
 		// TODO Auto-generated method stub
 		messages.add(msg);
 		setSent(false);
+		System.out.println("cambio a flase en recibes");
+		this.notifyAll();
 	}
 
+
+	public void setSockets(List<Socket> sockets) {
+		this.sockets = sockets;
+	}
+
+	public synchronized boolean addSentTo() {
+		// TODO Auto-generated method stub
+		sentTo += 1;
+		System.out.println();
+		if(sentTo == sockets.size()){
+			sentTo = 0;
+			sent = true;
+			this.notifyAll();
+			return true;
+		}else {
+			return false;
+		}
+			
+	}
 
 
 }

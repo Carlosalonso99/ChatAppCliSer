@@ -24,15 +24,42 @@ public class OutChannel extends Channel {
 		super.run();
 		try {
 			ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
+			synchronized (group) {
 
-			while (true) {
-				if (!group.isSent()) {
-					List<Message> msgs = group.getMessages();
-					Message msg = msgs.get(msgs.size() - 1);
-					oos.writeObject(msg);
-					oos.flush();
-					group.setSent(true);
+				while (group.isSent()) {
+					try {
+							System.out.println("OUT CHANNEL ESPERANDO MENSAJE");
+						group.wait();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					System.out.println("server antes de if");
+					if (!group.isSent()) {
+						System.out.println("server despues de if");
+						List<byte[]> msgs = group.getMessages();
+						byte[] msg = msgs.get(msgs.size() - 1);
+						oos.writeObject(msg);
+						oos.flush();
+
+						if(group.addSentTo()) {
+
+							System.out.println("esnviado a todos ya");
+						}else {
+							System.out.println("msg enviado");
+							try {
+								group.wait();
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+							
+						
+						
+					}
 				}
+				System.out.println("salio" + group.isSent());
 			}
 		} catch (SocketException e) {
 			System.err.println("Socket cerrado.");

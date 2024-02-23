@@ -1,8 +1,12 @@
 package Client;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+
+import javax.crypto.spec.SecretKeySpec;
 
 
 
@@ -14,10 +18,10 @@ public class Client {
 
 	private Socket s = new Socket();
 	private String name = "Carlos";
-	private volatile MessageManager reciber = new MessageManager(null);
-	private volatile MessageManager sender = new MessageManager(null);
-	Thread in = new InChannel(s, reciber);
-	Thread out = new OutChannel(s, sender);
+	private RSACipher c = new RSACipher();
+	private volatile MessageManager reciber ;
+	private volatile MessageManager sender;
+	
 
 	public Client() {
 		super();
@@ -30,6 +34,23 @@ public class Client {
 		InetSocketAddress isa = new InetSocketAddress("localhost", 9999);
 		try {
 			s.connect(isa);
+			ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
+			//Envio la publica al servidor antes de establecer la conexion
+			c.sendPublic(oos);
+			System.out.println("Envie mipublica al server");
+			
+			ObjectInputStream ois = new ObjectInputStream(this.s.getInputStream());
+			//Recibimos la clave de sesion encriptada
+		    SecretKeySpec sks =  c.recibeSessionKey(ois);
+		    System.out.println("Recibi la sesion key del server" + sks.getFormat());
+		    //Creamos el cipher de sesion para darselo a los msgManages
+		    AESCipher c = new AESCipher(sks);
+		    
+		    reciber = new MessageManager(null, c);
+		    sender = new MessageManager(null, c);
+		 
+		    
+		    
 			//Abrimos los hilos de lectura y escritura
 			openChannels(s);
 		} catch (IOException e) {
@@ -67,6 +88,8 @@ public class Client {
 	}
 	
 	public void openChannels(Socket s) {
+		Thread in = new InChannel(s, reciber);
+		Thread out = new OutChannel(s, sender);
 		in.start();
 		out.start();
 	}
